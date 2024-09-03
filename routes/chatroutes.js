@@ -1,15 +1,33 @@
 const express = require('express');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { Message } = require('../db'); // Adjust path if necessary
+const { Message } = require('../db');
 const router = express.Router();
 
+
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
+
+router.get('/history/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const userMessages = await Message.findOne({ userId });
+
+    if (!userMessages) {
+      return res.status(404).send('No messages found for this user.');
+    }
+
+    res.json(userMessages);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send(error.message);
+  }
+});
+
 
 router.post('/chat', async (req, res) => {
   const { userId, prompt } = req.body;
 
   try {
-    // Retrieve or create message history for the user
     let userMessages = await Message.findOne({ userId });
 
     if (!userMessages) {
@@ -21,7 +39,6 @@ router.post('/chat', async (req, res) => {
       parts: [{ text: msg.content }],
     }));
 
-    // Initialize chat model with the conversation history
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     const chat = model.startChat({
@@ -29,22 +46,21 @@ router.post('/chat', async (req, res) => {
       generationConfig: { maxOutputTokens: 100 },
     });
 
-    // Send the new message
     const result = await chat.sendMessage(prompt);
     const response = await result.response;
     const text = response.text();
 
-    // Store the new message and response
     userMessages.messages.push({ role: 'user', content: prompt });
     userMessages.messages.push({ role: 'model', content: text });
     await userMessages.save();
 
-    res.send(text);
+    res.send({text});
 
   } catch (error) {
     console.error('Error:', error);
     res.status(500).send(error.message);
   }
 });
+
 
 module.exports = router;
