@@ -23,7 +23,6 @@ router.get('/history/:userId', async (req, res) => {
   }
 });
 
-
 router.post('/chat', async (req, res) => {
   const { userId, prompt } = req.body;
 

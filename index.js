@@ -17,6 +17,15 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+app.use((err, req, res, next) => {
+  if (err.message.includes('GoogleGenerativeAIResponseError')) {
+      console.error('Google AI Service Error:', err);
+      res.status(500).json({ message: 'There was an error with the Google AI service. Please try again later.' });
+  } else {
+      console.error('Server Error:', err);
+      res.status(500).json({ message: 'An unexpected error occurred. Please try again later.' });
+  }
+});
 app.use("/", chatroutes);
 
 const PORT = process.env.PORT || 5050;
