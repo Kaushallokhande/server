@@ -14,7 +14,8 @@ mongoose.connect(process.env.MONGO_URI, {
   .catch(err => console.log('MongoDB connection error:', err));
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: 'https://chatpage-self.vercel.app' }));
+
 app.use(bodyParser.json());
 
 app.use((err, req, res, next) => {
